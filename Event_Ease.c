@@ -365,6 +365,7 @@ void viewAllBookings()
     fclose(file);
 }
 
+// Dashboard for user
 void dashboard()
 {
     int choice;
@@ -375,6 +376,7 @@ void dashboard()
         printf("1. View Events\n");
         printf("2. Book Seat\n");
         printf("3. Cancel Booking\n");
+        printf("4. View All Bookings\n");
         printf("0. Exit\n");
         printf("Select an option: ");
 
@@ -396,6 +398,9 @@ void dashboard()
             break;
         case 3:
             cancelBooking();
+            break;
+        case 4:
+            viewAllBookings();
             break;
         case 0:
             printf("Thank you for using EventEase!\n");
@@ -519,8 +524,28 @@ void bookSeat()
     int eventID;
 
     printf("\n-- Book a Seat --\n");
+    // Check if there are any events
+    FILE *file = fopen("events.txt", "r");
+    if (file == NULL)
+    {
+        printf("No events found.\n");
+        return;
+    }
+    int eventCount = 0;
+    char line[300];
+    while (fgets(line, sizeof(line), file))
+    {
+        eventCount++;
+    }
+    fclose(file);
+    if (eventCount == 0)
+    {
+        printf("No events found.\n");
+        return;
+    }
+
     viewEvents();
-    printf("Enter Event ID to book (1-4): ");
+    printf("Enter Event ID to book (1-%d): ", eventCount);
     if (scanf("%d", &eventID) != 1)
     {
         while (getchar() != '\n')
@@ -529,7 +554,7 @@ void bookSeat()
         return;
     }
 
-    if (eventID < 1 || eventID > 4)
+    if (eventID < 1 || eventID > eventCount)
     {
         printf("Invalid Event ID\n");
         return;
@@ -582,7 +607,7 @@ void saveBooking(int eventID, const char *name)
     FILE *file = fopen(BOOKINGS_FILE, "a");
     if (file == NULL)
     {
-        printf("Error opening file!\n");
+        printf("Error opening file,Name of event ID not Found!\n");
         return;
     }
 
