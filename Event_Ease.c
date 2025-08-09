@@ -18,45 +18,81 @@ void removeBooking(int eventID, const char *name);
 void viewAllBookings();
 void adminViewAllEvents();
 void dashboardDesign();
-
 void addEvent();
 
 int main()
 {
+    system("chcp 65001");
     loginPage();
     return 0;
 }
 
 void welcomePage()
 {
-    HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
-    CONSOLE_SCREEN_BUFFER_INFO ci;
-    GetConsoleScreenBufferInfo(h, &ci);
-
-    SetConsoleTextAttribute(h, FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-
     const char *art[] = {
-        "██     ██ ███████ ██       ██████  ██████  ███    ███ ███████     ████████  ██████      ",
-        "██     ██ ██      ██      ██      ██    ██ ████  ████ ██             ██    ██    ██     ",
-        "██  █  ██ █████   ██      ██      ██    ██ ██ ████ ██ █████          ██    ██    ██     ",
-        "██ ███ ██ ██      ██      ██      ██    ██ ██  ██  ██ ██             ██    ██    ██     ",
-        " ███ ███  ███████ ███████  ██████  ██████  ██      ██ ███████        ██     ██████      ",
-        "                                                                                        ",
-        "                                                                                        ",
-        "███████ ██    ██ ███████ ███    ██ ████████     ███████  █████  ███████ ███████         ",
-        "██      ██    ██ ██      ████   ██    ██        ██      ██   ██ ██      ██              ",
-        "█████   ██    ██ █████   ██ ██  ██    ██        █████   ███████ ███████ █████           ",
-        "██       ██  ██  ██      ██  ██ ██    ██        ██      ██   ██      ██ ██              ",
-        "███████   ████   ███████ ██   ████    ██        ███████ ██   ██ ███████ ███████         "};
+        "                                                                               ",
+        "                                                                               ",
+        "                                                                       @@@     ",
+        "                                                                     @@@ @@    ",
+        "                                                                  @@@@    @@   ",
+        "                                                               @@@@  @    @@   ",
+        "                                                             @@@          @    ",
+        "                                                          @@@-        @   @@@  ",
+        "                                                       %@@@           .     @  ",
+        "                                                     @@@               @    @  ",
+        "                                                    @#                     @@  ",
+        "                                                   @@                   #   @@ ",
+        "                                                   @@                   @    @@",
+        "                                                    @@                       @@",
+        "        @@@@@@ @@     @@  @@@@@@ #@@    @@ @@@@@@@@  *@                  @   @ ",
+        "        @@@@@@ *@@   @@@ @@@@@@@ @@@@   @@ @@@@@@@@  @@                  @.@@@ ",
+        "        @@      @@   @@  @@      @@ @   @@    @@     @                  @@@    ",
+        "        @@      @@   @@  @@      @@@@@  @@    @@     @@@             @@@@      ",
+        "        @@@@@@  @@   @@  @@@@@@  @@@@@  @@    @@       @            @@         ",
+        "        @@@@@@   @@ @@   @@@@@@  @@@ @@ @@    @@     .+#@@@@@@@@@@@@@@@@@@@@   ",
+        "        @@       @@ @@   @@      @@@ @@ @@    @@     @@@@@@@@@@*-.     @   @@  ",
+        "        @@       @@ @@   @@      @@@  @@@@    @@    @@                 @    @  ",
+        "        @@@@@@   .@@@@   @@@@@@@ @@@  @@@@    @@    @                       @  ",
+        "        @@@@@@    @@@     @@@@@@ @@@   @@@    @@    @@                 @   @:  ",
+        "                                                     @                 @   @   ",
+        "                        @@@@@   @@+   @@@@  @@@@@   @@                 @    @  ",
+        "                        @@     @@@@  @@     @@      @                       @  ",
+        "                        @@     @@ @  @@     @       @@                 @   @@  ",
+        "                        @@@@@  @  @   @@@.  @@@@     @                 @   @   ",
+        "                        @@    .@@@@@   :@@  @        @                 @   @@  ",
+        "                        @@    @@@@@@     @@ @       @@                      @+ ",
+        "                        @@@@@ @@   @ @@@@@@ @@@@@   @                  @    @@ ",
+        "                         @@@@ @    @@*@@@@   @@@@   @@               =%@@@@@=  ",
+        "                                                     @@@@@@@@@@@@@@@@@@@@@@@   ",
+        "                                                                               ",
+    };
 
-    int lines = sizeof(art) / sizeof(art[0]);
-    for (int i = 0; i < lines; i++)
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    WORD originalAttrs;
+
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    GetConsoleScreenBufferInfo(hConsole, &csbi);
+    originalAttrs = csbi.wAttributes;
+
+    // Set color to light green (0x0A)
+    SetConsoleTextAttribute(hConsole, FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+
+    int rows = sizeof(art) / sizeof(art[0]);
+
+    for (int i = 0; i < rows; i++)
     {
-        puts(art[i]);
-        Sleep(60);
+        for (const char *p = art[i]; *p; p++)
+        {
+            putchar(*p);
+            putchar(*p); // stretch horizontally
+            fflush(stdout);
+            Sleep(0);
+        }
+        putchar('\n');
     }
 
-    SetConsoleTextAttribute(h, ci.wAttributes);
+    // Reset original color
+    SetConsoleTextAttribute(hConsole, originalAttrs);
 }
 
 void dashboardDesign()
