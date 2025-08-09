@@ -19,12 +19,18 @@ void viewAllBookings();
 void adminViewAllEvents();
 void dashboardDesign();
 void addEvent();
+void clear();
 
 int main()
 {
     system("chcp 65001");
     loginPage();
     return 0;
+}
+
+void clear()
+{
+    system("cls");
 }
 
 void welcomePage()
@@ -164,18 +170,21 @@ void loginPage() // Function used for login
         if (strcmp(user, USERNAME) == 0 && strcmp(pass, PASSWORD) == 0)
         {
             printf("Login Success\n");
+            clear();
             dashboard();
             break;
         }
         else if (strcmp(user, aUSERNAME) == 0 && strcmp(pass, aPASSWORD) == 0)
         {
             printf("\nAdmin Access granted\n");
+            clear();
             adminDashboard();
             break;
         }
         else
         {
             printf("Invalid Credentials.\nTry again\n");
+            clear();
         }
     }
 }
@@ -202,18 +211,23 @@ void adminDashboard()
         switch (choice)
         {
         case 1:
+            clear();
             viewAllBookings();
             break;
         case 2:
+            clear();
             addEvent();
             break;
         case 3:
+            clear();
             adminViewAllEvents();
             break;
         case 0:
+            clear();
             printf("Logging out of admin panel...\n");
             return;
         default:
+            clear();
             printf("Invalid choice. Please select again.\n");
         }
     }
@@ -352,10 +366,12 @@ void adminViewAllEvents()
             strcpy(events[i], events[i + 1]);
         }
         eventCount--;
+        clear();
         printf("Event deleted successfully!\n");
     }
     else
     {
+        clear();
         return;
     }
 
@@ -427,21 +443,27 @@ void dashboard()
         switch (choice)
         {
         case 1:
+            clear();
             viewEvents();
             break;
         case 2:
+            clear();
             bookSeat();
             break;
         case 3:
+            clear();
             cancelBooking();
             break;
         case 4:
+            clear();
             viewAllBookings();
             break;
         case 0:
+            clear();
             printf("Thank you for using EventEase!\n");
             exit(0);
         default:
+            clear();
             printf("Invalid choice. Please select again.\n");
         }
     }
