@@ -1,3 +1,6 @@
+
+#include <windows.h>
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -28,9 +31,67 @@ int main()
     return 0;
 }
 
+void printCenteredInline(const char *str)
+{
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    int width = 80; // default width
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (GetConsoleScreenBufferInfo(hConsole, &csbi))
+        width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    int len = (int)strlen(str);
+    int pad = (width - len) / 2;
+    if (pad < 0)
+        pad = 0;
+    for (int i = 0; i < pad; i++)
+        putchar(' ');
+    printf("%s", str); // No newline!
+    fflush(stdout);
+}
+
 void clear()
 {
     system("cls");
+}
+
+void printCentered(const char *str)
+{
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    int width = 80; // default width
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (GetConsoleScreenBufferInfo(hConsole, &csbi))
+        width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    int len = (int)strlen(str);
+    int pad = (width - len) / 2;
+    if (pad < 0)
+        pad = 0;
+    for (int i = 0; i < pad; i++)
+        putchar(' ');
+    printf("%s\n", str);
+}
+
+void inputCentered(const char *prompt, char *buffer, int size)
+{
+    CONSOLE_SCREEN_BUFFER_INFO csbi;
+    int width = 80; // default width
+    HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (GetConsoleScreenBufferInfo(hConsole, &csbi))
+        width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+    int promptLen = (int)strlen(prompt);
+    int pad = (width - promptLen - size) / 2;
+    if (pad < 0)
+        pad = 0;
+    COORD pos = csbi.dwCursorPosition;
+    pos.X = pad;
+    SetConsoleCursorPosition(hConsole, pos);
+    printf("%s", prompt);
+    fflush(stdout);
+    // Move cursor right after prompt
+    pos.X += promptLen;
+    SetConsoleCursorPosition(hConsole, pos);
+    fgets(buffer, size, stdin);
+    size_t len = strlen(buffer);
+    if (len > 0 && buffer[len - 1] == '\n')
+        buffer[len - 1] = '\0';
 }
 
 void welcomePage()
@@ -111,43 +172,22 @@ void dashboardDesign()
     SetConsoleTextAttribute(h, FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
 
     const char *art[] = {
-        "                                                                             ",
-        "    ██████╗  █████╗ ███████╗██╗  ██╗██████╗  ██████╗  █████╗ ██████╗ ██████╗ ",
-        "    ██╔══██╗██╔══██╗██╔════╝██║  ██║██╔══██╗██╔═══██╗██╔══██╗██╔══██╗██╔══██╗",
-        "    ██║  ██║███████║███████╗███████║██████╔╝██║   ██║███████║██████╔╝██║  ██║",
-        "    ██║  ██║██╔══██║╚════██║██╔══██║██╔══██╗██║   ██║██╔══██║██╔══██╗██║  ██║",
-        "    ██████╔╝██║  ██║███████║██║  ██║██████╔╝╚██████╔╝██║  ██║██║  ██║██████╔╝",
-        "    ╚═════╝ ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚═════╝  ╚═════╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═════╝ "};
+        "  _____             _____  _    _  ____    ____            _____   _____  ",
+        " |  __ \\    /\\     / ____|| |  | ||  _ \\  / __ \\    /\\    |  __ \\ |  __ \\ ",
+        " | |  | |  /  \\   | (___  | |__| || |_) || |  | |  /  \\   | |__) || |  | |",
+        " | |  | | / /\\ \\   \\___ \\ |  __  ||  _ < | |  | | / /\\ \\  |  _  / | |  | |",
+        " | |__| |/ ____ \\  ____) || |  | || |_) || |__| |/ ____ \\ | | \\ \\ | |__| |",
+        " |_____//_/    \\_\\|_____/ |_|  |_||____/  \\____//_/    \\_\\|_|  \\_\\|_____/ ",
+        "                                                                          "};
 
     int lines = sizeof(art) / sizeof(art[0]);
     for (int i = 0; i < lines; i++)
     {
-        puts(art[i]);
+        printCentered(art[i]);
         Sleep(60);
     }
 
     SetConsoleTextAttribute(h, ci.wAttributes);
-}
-
-void getPassword(char *password, int maxLength)
-{
-    int i = 0;
-    char ch;
-    while ((ch = getch()) != '\r' && i < maxLength - 1)
-    {
-        if (ch == '\b' && i > 0)
-        {
-            i--;
-            printf("\b \b");
-        }
-        else if (ch != '\b')
-        {
-            password[i++] = ch;
-            printf("*");
-        }
-    }
-    password[i] = '\0';
-    printf("\n");
 }
 
 void loginPage() // Function used for login
@@ -161,29 +201,27 @@ void loginPage() // Function used for login
     while (1)
     {
         welcomePage();
-        printf("Enter your User name and password to login...\n");
-        printf("Username: ");
-        scanf("%49s", user);
-        printf("Password: ");
-        getPassword(pass, sizeof(pass));
+        printCentered("Enter your User name and password to login...");
+        inputCentered("Username: ", user, sizeof(user));
+        inputCentered("Password: ", pass, sizeof(pass));
 
         if (strcmp(user, USERNAME) == 0 && strcmp(pass, PASSWORD) == 0)
         {
-            printf("Login Success\n");
+            printCentered("Login Success");
             clear();
             dashboard();
             break;
         }
         else if (strcmp(user, aUSERNAME) == 0 && strcmp(pass, aPASSWORD) == 0)
         {
-            printf("\nAdmin Access granted\n");
+            printCentered("Admin Access granted");
             clear();
             adminDashboard();
             break;
         }
         else
         {
-            printf("Invalid Credentials.\nTry again\n");
+            printCentered("Invalid Credentials. Try again");
             clear();
         }
     }
@@ -195,16 +233,15 @@ void adminDashboard()
     while (1)
     {
         dashboardDesign();
-        printf("1. View all bookings\n");
-        printf("2. Add Event\n");
-        printf("3. View All Events\n");
-        printf("0. Exit\n");
-        printf("Select an option: ");
-        if (scanf("%d", &choice) != 1)
+        printCentered("1. View all bookings");
+        printCentered("2. Add Event");
+        printCentered("3. View All Events");
+        printCentered("0. Exit");
+        char buf[16];
+        inputCentered("Select an option: ", buf, sizeof(buf));
+        if (sscanf(buf, "%d", &choice) != 1)
         {
-            while (getchar() != '\n')
-                ; // clear invalid input
-            printf("Invalid input. Please enter a number.\n");
+            printCentered("Invalid input. Please enter a number.");
             continue;
         }
 
@@ -224,11 +261,11 @@ void adminDashboard()
             break;
         case 0:
             clear();
-            printf("Logging out of admin panel...\n");
+            printCentered("Logging out of admin panel...");
             return;
         default:
             clear();
-            printf("Invalid choice. Please select again.\n");
+            printCentered("Invalid choice. Please select again.");
         }
     }
 }
@@ -238,7 +275,7 @@ void adminViewAllEvents()
     FILE *file = fopen("events.txt", "r");
     if (file == NULL)
     {
-        printf("\nNo events found.\n");
+        printCentered("No events found.");
         return;
     }
 
@@ -247,7 +284,7 @@ void adminViewAllEvents()
     int eventCount = 0;
     char events[50][300]; // Store up to 50 events
 
-    printf("\n-- All Events --\n");
+    printCentered("-- All Events --");
     while (fgets(line, sizeof(line), file))
     {
         if (sscanf(line, "%99[^|]|%99[^|]|%19[^|]|%19[^|]|%d", name, venue, date, time, &seatCapacity) == 5)
@@ -265,17 +302,25 @@ void adminViewAllEvents()
         return;
 
     int choice;
-    printf("Select an event to view/edit/delete or %d to return: ", eventCount + 1);
-    if (scanf("%d", &choice) != 1)
+    char selectPrompt[100];
+    snprintf(selectPrompt, sizeof(selectPrompt), "Select an event to view/edit/delete or %d to return: ", eventCount + 1);
+    char buf[16];
+    inputCentered(selectPrompt, buf, sizeof(buf));
+    if (sscanf(buf, "%d", &choice) != 1)
     {
-        while (getchar() != '\n')
-            ;
-        printf("Invalid input.\n");
+        printCentered("Invalid input.");
         return;
     }
     if (choice < 1 || choice > eventCount + 1)
     {
-        printf("Invalid choice.\n");
+        printCentered("Invalid choice.");
+        return;
+    }
+    if (choice == eventCount + 1)
+        return;
+    if (choice < 1 || choice > eventCount + 1)
+    {
+        printCentered("Invalid choice.");
         return;
     }
     if (choice == eventCount + 1)
@@ -283,20 +328,28 @@ void adminViewAllEvents()
 
     // Show details for selected event
     sscanf(events[choice - 1], "%99[^|]|%99[^|]|%19[^|]|%19[^|]|%d", name, venue, date, time, &seatCapacity);
-    printf("\n--- Event Details ---\n");
-    printf("Name: %s\n", name);
-    printf("Venue: %s\n", venue);
-    printf("Date (DD-MM-YYYY): %s\n", date);
-    printf("Time: %s\n", time);
-    printf("Seat Capacity: %d\n", seatCapacity);
+    printCentered("--- Event Details ---");
+    char buf_output[200];
+    snprintf(buf_output, sizeof(buf_output), "Name: %s", name);
+    printCentered(buf_output);
+    snprintf(buf_output, sizeof(buf_output), "Venue: %s", venue);
+    printCentered(buf_output);
+    snprintf(buf_output, sizeof(buf_output), "Date (DD-MM-YYYY): %s", date);
+    printCentered(buf_output);
+    snprintf(buf_output, sizeof(buf_output), "Time: %s", time);
+    printCentered(buf_output);
+    snprintf(buf_output, sizeof(buf_output), "Seat Capacity: %d", seatCapacity);
+    printCentered(buf_output);
 
-    printf("\n1. Edit Event\n2. Delete Event\n3. Return\nSelect an option: ");
+    printCentered("1. Edit Event");
+    printCentered("2. Delete Event");
+    printCentered("3. Return");
     int action;
-    if (scanf("%d", &action) != 1)
+    char buf2[16];
+    inputCentered("Select an option: ", buf2, sizeof(buf2));
+    if (sscanf(buf2, "%d", &action) != 1)
     {
-        while (getchar() != '\n')
-            ;
-        printf("Invalid input.\n");
+        printCentered("Invalid input.");
         return;
     }
 
@@ -306,8 +359,9 @@ void adminViewAllEvents()
         char newName[100], newVenue[100], newDate[20], newTime[20];
         while (getchar() != '\n')
             ; // clear input buffer
-        printf("Enter new event name (or press Enter to keep '%s'): ", name);
-        fgets(newName, sizeof(newName), stdin);
+        char promptName[150];
+        snprintf(promptName, sizeof(promptName), "Enter new event name (or press Enter to keep '%s'): ", name);
+        inputCentered(promptName, newName, sizeof(newName));
         if (newName[0] == '\n')
             strcpy(newName, name);
         else
@@ -317,8 +371,9 @@ void adminViewAllEvents()
                 newName[l - 1] = '\0';
         }
 
-        printf("Enter new venue (or press Enter to keep '%s'): ", venue);
-        fgets(newVenue, sizeof(newVenue), stdin);
+        char promptVenue[150];
+        snprintf(promptVenue, sizeof(promptVenue), "Enter new venue (or press Enter to keep '%s'): ", venue);
+        inputCentered(promptVenue, newVenue, sizeof(newVenue));
         if (newVenue[0] == '\n')
             strcpy(newVenue, venue);
         else
@@ -328,8 +383,9 @@ void adminViewAllEvents()
                 newVenue[l - 1] = '\0';
         }
 
-        printf("Enter new date (DD-MM-YYYY) (or press Enter to keep '%s'): ", date);
-        fgets(newDate, sizeof(newDate), stdin);
+        char promptDate[150];
+        snprintf(promptDate, sizeof(promptDate), "Enter new date (DD-MM-YYYY) (or press Enter to keep '%s'): ", date);
+        inputCentered(promptDate, newDate, sizeof(newDate));
         if (newDate[0] == '\n')
             strcpy(newDate, date);
         else
@@ -339,8 +395,9 @@ void adminViewAllEvents()
                 newDate[l - 1] = '\0';
         }
 
-        printf("Enter new time (or press Enter to keep '%s'): ", time);
-        fgets(newTime, sizeof(newTime), stdin);
+        char promptTime[150];
+        snprintf(promptTime, sizeof(promptTime), "Enter new time (or press Enter to keep '%s'): ", time);
+        inputCentered(promptTime, newTime, sizeof(newTime));
         if (newTime[0] == '\n')
             strcpy(newTime, time);
         else
@@ -350,13 +407,16 @@ void adminViewAllEvents()
                 newTime[l - 1] = '\0';
         }
 
-        printf("Enter new seat capacity (or 0 to keep %d): ", seatCapacity);
-        if (scanf("%d", &newSeatCapacity) != 1 || newSeatCapacity <= 0)
+        char promptSeat[100];
+        snprintf(promptSeat, sizeof(promptSeat), "Enter new seat capacity (or 0 to keep %d): ", seatCapacity);
+        char buf3[16];
+        inputCentered(promptSeat, buf3, sizeof(buf3));
+        if (sscanf(buf3, "%d", &newSeatCapacity) != 1 || newSeatCapacity <= 0)
             newSeatCapacity = seatCapacity;
 
         // Update event in array
         snprintf(events[choice - 1], sizeof(events[choice - 1]), "%s|%s|%s|%s|%d\n", newName, newVenue, newDate, newTime, newSeatCapacity);
-        printf("Event updated successfully!\n");
+        printCentered("Event updated successfully!");
     }
     else if (action == 2)
     {
@@ -367,7 +427,7 @@ void adminViewAllEvents()
         }
         eventCount--;
         clear();
-        printf("Event deleted successfully!\n");
+        printCentered("Event deleted successfully!");
     }
     else
     {
@@ -379,7 +439,7 @@ void adminViewAllEvents()
     file = fopen("events.txt", "w");
     if (file == NULL)
     {
-        printf("Error updating events file!\n");
+        printCentered("Error updating events file!");
         return;
     }
     for (int i = 0; i < eventCount; i++)
@@ -394,13 +454,13 @@ void viewAllBookings()
     FILE *file = fopen(BOOKINGS_FILE, "r");
     if (file == NULL)
     {
-        printf("No bookings found.\n");
+        printCentered("No bookings found.");
         return;
     }
 
-    printf("\n--- All Bookings ---\n");
-    printf("Event ID | Name\n");
-    printf("-------------------\n");
+    printCentered("--- All Bookings ---");
+    printCentered("Event ID | Name");
+    printCentered("-------------------");
 
     char line[200];
     int eventID;
@@ -410,10 +470,12 @@ void viewAllBookings()
     {
         if (sscanf(line, "%d %[^\n]", &eventID, name) == 2)
         {
-            printf("%8d | %s\n", eventID, name);
+            char buf[200];
+            snprintf(buf, sizeof(buf), "%8d | %s", eventID, name);
+            printCentered(buf);
         }
     }
-    printf("-------------------\n");
+    printCentered("-------------------");
     fclose(file);
 }
 
@@ -425,18 +487,16 @@ void dashboard()
     while (1)
     {
         dashboardDesign();
-        printf("1. View Events\n");
-        printf("2. Book Seat\n");
-        printf("3. Cancel Booking\n");
-        printf("4. View All Bookings\n");
-        printf("0. Exit\n");
-        printf("Select an option: ");
-
-        if (scanf("%d", &choice) != 1)
+        printCentered("1. View Events");
+        printCentered("2. Book Seat");
+        printCentered("3. Cancel Booking");
+        printCentered("4. View All Bookings");
+        printCentered("0. Exit");
+        char buf[16];
+        inputCentered("Select an option: ", buf, sizeof(buf));
+        if (sscanf(buf, "%d", &choice) != 1)
         {
-            while (getchar() != '\n')
-                ;
-            printf("Invalid input. Please enter a number.\n");
+            printCentered("Invalid input. Please enter a number.");
             continue;
         }
 
@@ -460,11 +520,11 @@ void dashboard()
             break;
         case 0:
             clear();
-            printf("Thank you for using EventEase!\n");
+            printCentered("Thank you for using EventEase!");
             exit(0);
         default:
             clear();
-            printf("Invalid choice. Please select again.\n");
+            printCentered("Invalid choice. Please select again.");
         }
     }
 }
@@ -474,49 +534,29 @@ void addEvent()
     char name[100], venue[100], date[20], time[20];
     int seatCapacity;
 
-    printf("\n-- Add New Event --\n");
-    printf("Event Name: ");
-    while (getchar() != '\n')
-        ; // clear input buffer
-    fgets(name, sizeof(name), stdin);
-    size_t len = strlen(name);
-    if (len > 0 && name[len - 1] == '\n')
-        name[len - 1] = '\0';
+    printCentered("-- Add New Event --");
+    inputCentered("Event Name: ", name, 40);
+    inputCentered("Venue: ", venue, 40);
+    inputCentered("Date (DD-MM-YYYY): ", date, sizeof(date));
+    inputCentered("Time (HH:MM): ", time, sizeof(time));
 
-    printf("Venue: ");
-    fgets(venue, sizeof(venue), stdin);
-    len = strlen(venue);
-    if (len > 0 && venue[len - 1] == '\n')
-        venue[len - 1] = '\0';
-
-    printf("Date (DD-MM-YYYY): ");
-    fgets(date, sizeof(date), stdin);
-    len = strlen(date);
-    if (len > 0 && date[len - 1] == '\n')
-        date[len - 1] = '\0';
-
-    printf("Time (HH:MM): ");
-    fgets(time, sizeof(time), stdin);
-    len = strlen(time);
-    if (len > 0 && time[len - 1] == '\n')
-        time[len - 1] = '\0';
-
-    printf("Seat Capacity: ");
-    if (scanf("%d", &seatCapacity) != 1)
+    char buf[16];
+    inputCentered("Seat Capacity: ", buf, sizeof(buf));
+    if (sscanf(buf, "%d", &seatCapacity) != 1)
     {
-        printf("Invalid input for seat capacity.\n");
+        printCentered("Invalid input for seat capacity.");
         return;
     }
 
     FILE *file = fopen("events.txt", "a");
     if (file == NULL)
     {
-        printf("Error opening events file!\n");
+        printCentered("Error opening events file!");
         return;
     }
     fprintf(file, "%s|%s|%s|%s|%d\n", name, venue, date, time, seatCapacity);
     fclose(file);
-    printf("Event added successfully!\n");
+    printCentered("Event added successfully!");
 }
 
 void viewEvents()
@@ -524,7 +564,7 @@ void viewEvents()
     FILE *file = fopen("events.txt", "r");
     if (file == NULL)
     {
-        printf("\nNo events found.\n");
+        printCentered("No events found.");
         return;
     }
 
@@ -533,34 +573,46 @@ void viewEvents()
     int eventCount = 0;
     char events[50][300]; // Store up to 50 events
 
-    printf("\n-- Available Events --\n");
+    printCentered("-- Available Events --");
     while (fgets(line, sizeof(line), file))
     {
         if (sscanf(line, "%99[^|]|%99[^|]|%19[^|]|%19[^|]|%d", name, venue, date, time, &seatCapacity) == 5)
         {
             eventCount++;
             snprintf(events[eventCount - 1], sizeof(events[eventCount - 1]), "%s|%s|%s|%s|%d", name, venue, date, time, seatCapacity);
-            printf("%d. %s\n", eventCount, name);
+            char buf[200];
+            snprintf(buf, sizeof(buf), "%d. %s", eventCount, name);
+            printCentered(buf);
         }
     }
     fclose(file);
-    printf("%d. Return to main menu\n", eventCount + 1);
+    char buf[100];
+    snprintf(buf, sizeof(buf), "%d. Return to main menu", eventCount + 1);
+    printCentered(buf);
 
     if (eventCount == 0)
         return;
 
     int choice;
-    printf("Select an event to view details or %d to return: ", eventCount + 1);
-    if (scanf("%d", &choice) != 1)
+    char selectPrompt[100];
+    snprintf(selectPrompt, sizeof(selectPrompt), "Select an event to view details or %d to return: ", eventCount + 1);
+    char buf_input[16];
+    inputCentered(selectPrompt, buf_input, sizeof(buf_input));
+    if (sscanf(buf_input, "%d", &choice) != 1)
     {
-        while (getchar() != '\n')
-            ;
-        printf("Invalid input.\n");
+        printCentered("Invalid input.");
         return;
     }
     if (choice < 1 || choice > eventCount + 1)
     {
-        printf("Invalid choice.\n");
+        printCentered("Invalid choice.");
+        return;
+    }
+    if (choice == eventCount + 1)
+        return;
+    if (choice < 1 || choice > eventCount + 1)
+    {
+        printCentered("Invalid choice.");
         return;
     }
     if (choice == eventCount + 1)
@@ -568,12 +620,17 @@ void viewEvents()
 
     // Show details for selected event
     sscanf(events[choice - 1], "%99[^|]|%99[^|]|%19[^|]|%19[^|]|%d", name, venue, date, time, &seatCapacity);
-    printf("\n--- Event Details ---\n");
-    printf("Name: %s\n", name);
-    printf("Venue: %s\n", venue);
-    printf("Date (DD-MM-YYYY): %s\n", date);
-    printf("Time: %s\n", time);
-    printf("Seat Capacity: %d\n", seatCapacity);
+    printCentered("\n--- Event Details ---");
+    snprintf(buf, sizeof(buf), "Name: %s", name);
+    printCentered(buf);
+    snprintf(buf, sizeof(buf), "Venue: %s", venue);
+    printCentered(buf);
+    snprintf(buf, sizeof(buf), "Date (DD-MM-YYYY): %s", date);
+    printCentered(buf);
+    snprintf(buf, sizeof(buf), "Time: %s", time);
+    printCentered(buf);
+    snprintf(buf, sizeof(buf), "Seat Capacity: %d", seatCapacity);
+    printCentered(buf);
 }
 
 void bookSeat()
@@ -581,12 +638,12 @@ void bookSeat()
     char name[100];
     int eventID;
 
-    printf("\n-- Book a Seat --\n");
+    printCentered("-- Book a Seat --");
     // Check if there are any events
     FILE *file = fopen("events.txt", "r");
     if (file == NULL)
     {
-        printf("No events found.\n");
+        printCentered("No events found.");
         return;
     }
     int eventCount = 0;
@@ -598,38 +655,35 @@ void bookSeat()
     fclose(file);
     if (eventCount == 0)
     {
-        printf("No events found.\n");
+        printCentered("No events found.");
         return;
     }
 
     viewEvents();
-    printf("Enter Event ID to book (1-%d): ", eventCount);
-    if (scanf("%d", &eventID) != 1)
+    char buf[100];
+    snprintf(buf, sizeof(buf), "Enter Event ID to book (1-%d): ", eventCount);
+    char buf2[16];
+    inputCentered(buf, buf2, sizeof(buf2));
+    if (sscanf(buf2, "%d", &eventID) != 1)
     {
-        while (getchar() != '\n')
-            ;
-        printf("Invalid input for Event ID.\n");
+        printCentered("Invalid input for Event ID.");
         return;
     }
 
     if (eventID < 1 || eventID > eventCount)
     {
-        printf("Invalid Event ID\n");
+        printCentered("Invalid Event ID");
         return;
     }
 
-    printf("Enter your name: ");
     while (getchar() != '\n')
         ;
-    fgets(name, sizeof(name), stdin);
-
-    size_t len = strlen(name);
-    if (len > 0 && name[len - 1] == '\n')
-        name[len - 1] = '\0';
+    inputCentered("Enter your name: ", name, sizeof(name));
 
     saveBooking(eventID, name);
 
-    printf("Seat booked successfully for %s at event ID %d.\n", name, eventID);
+    snprintf(buf, sizeof(buf), "Seat booked successfully for %s at event ID %d.", name, eventID);
+    printCentered(buf);
 }
 
 void cancelBooking()
@@ -637,23 +691,16 @@ void cancelBooking()
     char name[100];
     int eventID;
 
-    printf("\n-- Cancel Booking --\n");
-    printf("Enter your name: ");
+    printCentered("-- Cancel Booking --");
     while (getchar() != '\n')
-        ; // clear newline character
-    fgets(name, sizeof(name), stdin);
+        ;
+    inputCentered("Enter your name: ", name, sizeof(name));
 
-    // Remove trailing newline from fgets
-    size_t len = strlen(name);
-    if (len > 0 && name[len - 1] == '\n')
-        name[len - 1] = '\0';
-
-    printf("Enter Event ID to cancel: ");
-    if (scanf("%d", &eventID) != 1)
+    char buf[16];
+    inputCentered("Enter Event ID to cancel: ", buf, sizeof(buf));
+    if (sscanf(buf, "%d", &eventID) != 1)
     {
-        while (getchar() != '\n')
-            ;
-        printf("Invalid input for Event ID.\n");
+        printCentered("Invalid input for Event ID.");
         return;
     }
 
@@ -665,7 +712,7 @@ void saveBooking(int eventID, const char *name)
     FILE *file = fopen(BOOKINGS_FILE, "a");
     if (file == NULL)
     {
-        printf("Error opening file,Name of event ID not Found!\n");
+        printCentered("Error opening file, Name of event ID not Found!");
         return;
     }
 
@@ -680,7 +727,7 @@ void removeBooking(int eventID, const char *name)
 
     if (file == NULL || tempFile == NULL)
     {
-        printf("Error opening file!\n");
+        printCentered("Error opening file!");
         if (file)
             fclose(file);
         if (tempFile)
@@ -713,11 +760,13 @@ void removeBooking(int eventID, const char *name)
     {
         remove(BOOKINGS_FILE);
         rename("temp.txt", BOOKINGS_FILE);
-        printf("Booking successfully canceled.\n");
+        printCentered("Booking successfully canceled.");
     }
     else
     {
         remove("temp.txt");
-        printf("No booking found for %s at event ID %d.\n", name, eventID);
+        char buf[200];
+        snprintf(buf, sizeof(buf), "No booking found for %s at event ID %d.", name, eventID);
+        printCentered(buf);
     }
 }
