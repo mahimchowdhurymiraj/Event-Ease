@@ -20,6 +20,8 @@ void adminViewAllEvents();
 void dashboardDesign();
 void addEvent();
 void clear();
+void printLeftAlignedBlock(const char *str);
+void resetLeftAlignedBlock();
 
 int main()
 {
@@ -64,6 +66,70 @@ void printCentered(const char *str)
     for (int i = 0; i < pad; i++)
         putchar(' ');
     printf("%s\n", str);
+}
+
+// New function to print a block of text left-aligned but centered as a block
+void printLeftAlignedBlock(const char *str)
+{
+    static int maxLen = 0;
+    static int first = 1;
+    static int pad = 0;
+
+    // If this is the first call or reset was done, measure width
+    if (first)
+    {
+        CONSOLE_SCREEN_BUFFER_INFO csbi;
+        int width = 80; // default width
+        HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+        if (GetConsoleScreenBufferInfo(hConsole, &csbi))
+            width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+
+        // Scan through strings to find max length
+        maxLen = (int)strlen(str);
+
+        // Calculate padding for centering the block
+        pad = (width - maxLen) / 2;
+        if (pad < 0)
+            pad = 0;
+
+        first = 0;
+    }
+    else
+    {
+        // For subsequent calls, update maxLen if needed
+        int currentLen = (int)strlen(str);
+        if (currentLen > maxLen)
+        {
+            // Recalculate padding based on new max length
+            CONSOLE_SCREEN_BUFFER_INFO csbi;
+            int width = 80; // default width
+            HANDLE hConsole = GetStdHandle(STD_OUTPUT_HANDLE);
+            if (GetConsoleScreenBufferInfo(hConsole, &csbi))
+                width = csbi.srWindow.Right - csbi.srWindow.Left + 1;
+
+            maxLen = currentLen;
+            pad = (width - maxLen) / 2;
+            if (pad < 0)
+                pad = 0;
+        }
+    }
+
+    // Apply padding and print
+    for (int i = 0; i < pad; i++)
+        putchar(' ');
+    printf("%s\n", str);
+}
+
+// Function to reset the maxLen for a new block
+void resetLeftAlignedBlock()
+{
+    static int first;
+    static int maxLen;
+    static int pad;
+
+    first = 1;
+    maxLen = 0;
+    pad = 0;
 }
 
 void inputCentered(const char *prompt, char *buffer, int size)
@@ -197,6 +263,7 @@ void loginPage() // Function used for login
     char user[50], pass[50];
     while (1)
     {
+        clear(); // Clear screen before welcome page
         welcomePage();
         printCentered("Enter your User name and password to login...");
         inputCentered("Username: ", user, sizeof(user));
@@ -230,10 +297,11 @@ void adminDashboard()
     while (1)
     {
         dashboardDesign();
-        printCentered("1. View all bookings");
-        printCentered("2. Add Event");
-        printCentered("3. View All Events");
-        printCentered("0. Exit");
+        resetLeftAlignedBlock(); // Reset the block formatting
+        printLeftAlignedBlock("1. View all bookings");
+        printLeftAlignedBlock("2. Add Event");
+        printLeftAlignedBlock("3. View All Events");
+        printLeftAlignedBlock("0. Exit");
         char buf[16];
         inputCentered("Select an option: ", buf, sizeof(buf));
         if (sscanf(buf, "%d", &choice) != 1)
@@ -282,6 +350,7 @@ void adminViewAllEvents()
     char events[50][300]; // Store up to 50 events
 
     printCentered("-- All Events --");
+    resetLeftAlignedBlock(); // Reset the block formatting
     while (fgets(line, sizeof(line), file))
     {
         if (sscanf(line, "%99[^|]|%99[^|]|%19[^|]|%19[^|]|%d", name, venue, date, time, &seatCapacity) == 5)
@@ -289,11 +358,15 @@ void adminViewAllEvents()
             eventCount++;
             strncpy(events[eventCount - 1], line, sizeof(events[eventCount - 1]) - 1);
             events[eventCount - 1][sizeof(events[eventCount - 1]) - 1] = '\0';
-            printf("%d. %s\n", eventCount, name);
+            char eventBuf[200];
+            snprintf(eventBuf, sizeof(eventBuf), "%d. %s", eventCount, name);
+            printLeftAlignedBlock(eventBuf);
         }
     }
     fclose(file);
-    printf("%d. Return to admin menu\n", eventCount + 1);
+    char returnBuf[100];
+    snprintf(returnBuf, sizeof(returnBuf), "%d. Return to admin menu", eventCount + 1);
+    printLeftAlignedBlock(returnBuf);
 
     if (eventCount == 0)
         return;
@@ -314,33 +387,31 @@ void adminViewAllEvents()
         return;
     }
     if (choice == eventCount + 1)
-        return;
-    if (choice < 1 || choice > eventCount + 1)
     {
-        printCentered("Invalid choice.");
+        clear(); // Clear screen before returning to admin dashboard
         return;
     }
-    if (choice == eventCount + 1)
-        return;
 
     // Show details for selected event
     sscanf(events[choice - 1], "%99[^|]|%99[^|]|%19[^|]|%19[^|]|%d", name, venue, date, time, &seatCapacity);
     printCentered("--- Event Details ---");
+    resetLeftAlignedBlock(); // Reset the block formatting
     char buf_output[200];
     snprintf(buf_output, sizeof(buf_output), "Name: %s", name);
-    printCentered(buf_output);
+    printLeftAlignedBlock(buf_output);
     snprintf(buf_output, sizeof(buf_output), "Venue: %s", venue);
-    printCentered(buf_output);
+    printLeftAlignedBlock(buf_output);
     snprintf(buf_output, sizeof(buf_output), "Date (DD-MM-YYYY): %s", date);
-    printCentered(buf_output);
+    printLeftAlignedBlock(buf_output);
     snprintf(buf_output, sizeof(buf_output), "Time: %s", time);
-    printCentered(buf_output);
+    printLeftAlignedBlock(buf_output);
     snprintf(buf_output, sizeof(buf_output), "Seat Capacity: %d", seatCapacity);
-    printCentered(buf_output);
+    printLeftAlignedBlock(buf_output);
 
-    printCentered("1. Edit Event");
-    printCentered("2. Delete Event");
-    printCentered("3. Return");
+    resetLeftAlignedBlock(); // Reset for menu options
+    printLeftAlignedBlock("1. Edit Event");
+    printLeftAlignedBlock("2. Delete Event");
+    printLeftAlignedBlock("3. Return");
     int action;
     char buf2[16];
     inputCentered("Select an option: ", buf2, sizeof(buf2));
@@ -414,6 +485,11 @@ void adminViewAllEvents()
         // Update event in array
         snprintf(events[choice - 1], sizeof(events[choice - 1]), "%s|%s|%s|%s|%d\n", newName, newVenue, newDate, newTime, newSeatCapacity);
         printCentered("Event updated successfully!");
+
+        // Add prompt to continue
+        char continueBuf[10];
+        inputCentered("Press Enter to continue...", continueBuf, sizeof(continueBuf));
+        clear(); // Clear screen after event update
     }
     else if (action == 2)
     {
@@ -456,8 +532,9 @@ void viewAllBookings()
     }
 
     printCentered("--- All Bookings ---");
-    printCentered("Event ID | Name");
-    printCentered("-------------------");
+    resetLeftAlignedBlock(); // Reset the block formatting
+    printLeftAlignedBlock("Event ID | Name");
+    printLeftAlignedBlock("-------------------");
 
     char line[200];
     int eventID;
@@ -469,11 +546,16 @@ void viewAllBookings()
         {
             char buf[200];
             snprintf(buf, sizeof(buf), "%8d | %s", eventID, name);
-            printCentered(buf);
+            printLeftAlignedBlock(buf);
         }
     }
-    printCentered("-------------------");
+    printLeftAlignedBlock("-------------------");
     fclose(file);
+
+    // Add prompt to continue
+    char continueBuf[10];
+    inputCentered("Press Enter to continue...", continueBuf, sizeof(continueBuf));
+    clear(); // Clear screen after viewing bookings
 }
 
 // Dashboard for user
@@ -484,11 +566,12 @@ void dashboard()
     while (1)
     {
         dashboardDesign();
-        printCentered("1. View Events");
-        printCentered("2. Book Seat");
-        printCentered("3. Cancel Booking");
-        printCentered("4. View All Bookings");
-        printCentered("0. Exit");
+        resetLeftAlignedBlock(); // Reset the block formatting
+        printLeftAlignedBlock("1. View Events");
+        printLeftAlignedBlock("2. Book Seat");
+        printLeftAlignedBlock("3. Cancel Booking");
+        printLeftAlignedBlock("4. View All Bookings");
+        printLeftAlignedBlock("0. Exit");
         char buf[16];
         inputCentered("Select an option: ", buf, sizeof(buf));
         if (sscanf(buf, "%d", &choice) != 1)
@@ -532,6 +615,7 @@ void addEvent()
     int seatCapacity;
 
     printCentered("-- Add New Event --");
+    resetLeftAlignedBlock(); // Reset the block formatting for prompts
     inputCentered("Event Name: ", name, 40);
     inputCentered("Venue: ", venue, 40);
     inputCentered("Date (DD-MM-YYYY): ", date, sizeof(date));
@@ -554,6 +638,11 @@ void addEvent()
     fprintf(file, "%s|%s|%s|%s|%d\n", name, venue, date, time, seatCapacity);
     fclose(file);
     printCentered("Event added successfully!");
+
+    // Add prompt to continue
+    char continueBuf[10];
+    inputCentered("Press Enter to continue...", continueBuf, sizeof(continueBuf));
+    clear(); // Clear screen after adding event
 }
 
 void viewEvents()
@@ -571,6 +660,7 @@ void viewEvents()
     char events[50][300]; // Store up to 50 events
 
     printCentered("-- Available Events --");
+    resetLeftAlignedBlock(); // Reset the block formatting
     while (fgets(line, sizeof(line), file))
     {
         if (sscanf(line, "%99[^|]|%99[^|]|%19[^|]|%19[^|]|%d", name, venue, date, time, &seatCapacity) == 5)
@@ -579,13 +669,13 @@ void viewEvents()
             snprintf(events[eventCount - 1], sizeof(events[eventCount - 1]), "%s|%s|%s|%s|%d", name, venue, date, time, seatCapacity);
             char buf[200];
             snprintf(buf, sizeof(buf), "%d. %s", eventCount, name);
-            printCentered(buf);
+            printLeftAlignedBlock(buf);
         }
     }
     fclose(file);
     char buf[100];
     snprintf(buf, sizeof(buf), "%d. Return to main menu", eventCount + 1);
-    printCentered(buf);
+    printLeftAlignedBlock(buf);
 
     if (eventCount == 0)
         return;
@@ -606,28 +696,30 @@ void viewEvents()
         return;
     }
     if (choice == eventCount + 1)
-        return;
-    if (choice < 1 || choice > eventCount + 1)
     {
-        printCentered("Invalid choice.");
+        clear(); // Clear screen before returning to dashboard
         return;
     }
-    if (choice == eventCount + 1)
-        return;
 
     // Show details for selected event
     sscanf(events[choice - 1], "%99[^|]|%99[^|]|%19[^|]|%19[^|]|%d", name, venue, date, time, &seatCapacity);
     printCentered("\n--- Event Details ---");
+    resetLeftAlignedBlock(); // Reset the block formatting
     snprintf(buf, sizeof(buf), "Name: %s", name);
-    printCentered(buf);
+    printLeftAlignedBlock(buf);
     snprintf(buf, sizeof(buf), "Venue: %s", venue);
-    printCentered(buf);
+    printLeftAlignedBlock(buf);
     snprintf(buf, sizeof(buf), "Date (DD-MM-YYYY): %s", date);
-    printCentered(buf);
+    printLeftAlignedBlock(buf);
     snprintf(buf, sizeof(buf), "Time: %s", time);
-    printCentered(buf);
+    printLeftAlignedBlock(buf);
     snprintf(buf, sizeof(buf), "Seat Capacity: %d", seatCapacity);
-    printCentered(buf);
+    printLeftAlignedBlock(buf);
+
+    // Add prompt to continue
+    char continueBuf[10];
+    inputCentered("Press Enter to continue...", continueBuf, sizeof(continueBuf));
+    clear(); // Clear screen after viewing event details
 }
 
 void bookSeat()
@@ -681,6 +773,11 @@ void bookSeat()
 
     snprintf(buf, sizeof(buf), "Seat booked successfully for %s at event ID %d.", name, eventID);
     printCentered(buf);
+
+    // Add prompt to continue
+    char continueBuf[10];
+    inputCentered("Press Enter to continue...", continueBuf, sizeof(continueBuf));
+    clear(); // Clear screen after booking confirmation
 }
 
 void cancelBooking()
@@ -702,6 +799,11 @@ void cancelBooking()
     }
 
     removeBooking(eventID, name);
+
+    // Add prompt to continue
+    char continueBuf[10];
+    inputCentered("Press Enter to continue...", continueBuf, sizeof(continueBuf));
+    clear(); // Clear screen after cancellation process
 }
 
 void saveBooking(int eventID, const char *name)
