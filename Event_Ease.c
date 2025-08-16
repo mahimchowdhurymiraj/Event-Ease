@@ -1,5 +1,9 @@
+<<<<<<< HEAD
 // Header Functions
 
+=======
+// this comment is to check if fahim shahriar is a chutiya or not #repocheck
+>>>>>>> a39bc3086aa5fe1265589f76a230ff67a4b3d0e3
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
