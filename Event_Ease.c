@@ -1,3 +1,5 @@
+// Header Functions
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -88,10 +90,11 @@ void printCenteredInline(const char *str)
 // Function to print a block of menu items centered as a group but left-aligned within the block
 void printCenteredBlock(const char *items[], int count)
 {
-    if (count <= 0) return;
-    
+    if (count <= 0)
+        return;
+
     int width = getConsoleWidth();
-    
+
     // Find the maximum length among all items
     int maxLen = 0;
     for (int i = 0; i < count; i++)
@@ -100,12 +103,12 @@ void printCenteredBlock(const char *items[], int count)
         if (len > maxLen)
             maxLen = len;
     }
-    
+
     // Calculate padding to center the block
     int pad = (width - maxLen) / 2;
     if (pad < 0)
         pad = 0;
-    
+
     // Print each item with the same left padding
     for (int i = 0; i < count; i++)
     {
@@ -122,13 +125,13 @@ void inputCentered(const char *prompt, char *buffer, int size)
     int pad = (width - promptLen) / 2;
     if (pad < 0)
         pad = 0;
-    
+
     // Print padding and prompt
     for (int i = 0; i < pad; i++)
         putchar(' ');
     printf("%s", prompt);
     fflush(stdout);
-    
+
     // Get input directly without cursor manipulation
     fgets(buffer, size, stdin);
     size_t len = strlen(buffer);
@@ -240,11 +243,11 @@ void dashboardDesign()
 // ===== AUTHENTICATION FUNCTIONS =====
 void loginPage()
 {
-    #define USERNAME "user"
-    #define PASSWORD "weakpassword"
-    #define aUSERNAME "admin"
-    #define aPASSWORD "strongpassword"
-    
+#define USERNAME "user"
+#define PASSWORD "weakpassword"
+#define aUSERNAME "admin"
+#define aPASSWORD "strongpassword"
+
     char user[50], pass[50];
     while (1)
     {
@@ -286,19 +289,18 @@ void dashboard()
     while (1)
     {
         dashboardDesign();
-        
+
         // Create menu items array
         const char *menuItems[] = {
             "1. View Events",
-            "2. Book Seat", 
+            "2. Book Seat",
             "3. Cancel Booking",
             "4. View All Bookings",
-            "0. Exit"
-        };
-        
+            "0. Exit"};
+
         // Print the menu as a centered block
         printCenteredBlock(menuItems, 5);
-        
+
         char buf[16];
         inputCentered("Select an option: ", buf, sizeof(buf));
         if (sscanf(buf, "%d", &choice) != 1)
@@ -341,18 +343,17 @@ void adminDashboard()
     while (1)
     {
         dashboardDesign();
-        
+
         // Create admin menu items array
         const char *adminMenuItems[] = {
             "1. View all bookings",
             "2. Add Event",
-            "3. View All Events", 
-            "0. Exit"
-        };
-        
+            "3. View All Events",
+            "0. Exit"};
+
         // Print the admin menu as a centered block
         printCenteredBlock(adminMenuItems, 4);
-        
+
         char buf[16];
         inputCentered("Select an option: ", buf, sizeof(buf));
         if (sscanf(buf, "%d", &choice) != 1)
@@ -399,11 +400,11 @@ void adminViewAllEvents()
     char line[300], name[100], venue[100], date[20], time[20];
     int seatCapacity, newSeatCapacity;
     int eventCount = 0;
-    char events[50][300]; // Store up to 50 events
+    char events[50][300];         // Store up to 50 events
     char eventMenuItems[51][200]; // Array for menu items (50 events + return option)
 
     printCentered("-- All Events --");
-    
+
     while (fgets(line, sizeof(line), file))
     {
         if (sscanf(line, "%99[^|]|%99[^|]|%19[^|]|%19[^|]|%d", name, venue, date, time, &seatCapacity) == 5)
@@ -415,17 +416,17 @@ void adminViewAllEvents()
         }
     }
     fclose(file);
-    
+
     // Add return option
     snprintf(eventMenuItems[eventCount], sizeof(eventMenuItems[eventCount]), "%d. Return to admin menu", eventCount + 1);
-    
+
     // Convert to const char* array for printCenteredBlock
     const char *menuPtrs[51];
     for (int i = 0; i <= eventCount; i++)
     {
         menuPtrs[i] = eventMenuItems[i];
     }
-    
+
     // Print the event menu as a centered block
     printCenteredBlock(menuPtrs, eventCount + 1);
 
@@ -456,7 +457,7 @@ void adminViewAllEvents()
     // Show details for selected event
     sscanf(events[choice - 1], "%99[^|]|%99[^|]|%19[^|]|%19[^|]|%d", name, venue, date, time, &seatCapacity);
     printCentered("--- Event Details ---");
-    
+
     // Create event details array
     char eventDetails[5][200];
     snprintf(eventDetails[0], sizeof(eventDetails[0]), "Name: %s", name);
@@ -464,24 +465,23 @@ void adminViewAllEvents()
     snprintf(eventDetails[2], sizeof(eventDetails[2]), "Date (DD-MM-YYYY): %s", date);
     snprintf(eventDetails[3], sizeof(eventDetails[3]), "Time: %s", time);
     snprintf(eventDetails[4], sizeof(eventDetails[4]), "Seat Capacity: %d", seatCapacity);
-    
+
     // Convert to const char* array for printCenteredBlock
     const char *detailsPtrs[5];
     for (int i = 0; i < 5; i++)
     {
         detailsPtrs[i] = eventDetails[i];
     }
-    
+
     // Print event details as a centered block
     printCenteredBlock(detailsPtrs, 5);
-    
+
     // Create action menu
     const char *actionMenuItems[] = {
         "1. Edit Event",
         "2. Delete Event",
-        "3. Return"
-    };
-    
+        "3. Return"};
+
     // Print action menu as a centered block
     printCenteredBlock(actionMenuItems, 3);
     int action;
@@ -604,11 +604,11 @@ void viewAllBookings()
     }
 
     printCentered("--- All Bookings ---");
-    
+
     // Create bookings list with header
     char bookingLines[102][200]; // 100 bookings + header + footer
     int lineCount = 0;
-    
+
     // Add header
     strcpy(bookingLines[lineCount++], "Event ID | Name");
     strcpy(bookingLines[lineCount++], "-------------------");
@@ -625,18 +625,18 @@ void viewAllBookings()
             lineCount++;
         }
     }
-    
+
     // Add footer
     strcpy(bookingLines[lineCount++], "-------------------");
     fclose(file);
-    
+
     // Convert to const char* array for printCenteredBlock
     const char *bookingPtrs[102];
     for (int i = 0; i < lineCount; i++)
     {
         bookingPtrs[i] = bookingLines[i];
     }
-    
+
     // Print bookings as a centered block
     printCenteredBlock(bookingPtrs, lineCount);
 
@@ -651,7 +651,7 @@ void showEventSummary(const char *name, const char *venue, const char *date, con
 {
     printCentered("=== Event Summary ===");
     printf("\n");
-    
+
     // Create event details array for centered display
     char eventDetails[5][200];
     snprintf(eventDetails[0], sizeof(eventDetails[0]), "Event Name: %s", name);
@@ -659,14 +659,14 @@ void showEventSummary(const char *name, const char *venue, const char *date, con
     snprintf(eventDetails[2], sizeof(eventDetails[2]), "Date: %s", date);
     snprintf(eventDetails[3], sizeof(eventDetails[3]), "Time: %s", time);
     snprintf(eventDetails[4], sizeof(eventDetails[4]), "Seat Capacity: %d", seatCapacity);
-    
+
     // Convert to const char* array for printCenteredBlock
     const char *detailsPtrs[5];
     for (int i = 0; i < 5; i++)
     {
         detailsPtrs[i] = eventDetails[i];
     }
-    
+
     // Print event details as a centered block
     printCenteredBlock(detailsPtrs, 5);
     printf("\n");
@@ -680,7 +680,7 @@ void addEvent()
 
     printCentered("-- Add New Event --");
     printf("\n"); // Add some spacing
-    
+
     // Simply collect the inputs with centered prompts - no duplicate display
     inputCentered("Event Name: ", name, sizeof(name));
     inputCentered("Venue: ", venue, sizeof(venue));
@@ -698,17 +698,16 @@ void addEvent()
     // Show event summary
     clear();
     showEventSummary(name, venue, date, time, seatCapacity);
-    
+
     // Ask for confirmation
     const char *confirmOptions[] = {
         "1. Save Event",
-        "2. Cancel"
-    };
+        "2. Cancel"};
     printCenteredBlock(confirmOptions, 2);
-    
+
     char choice[10];
     inputCentered("Choose an option (1-2): ", choice, sizeof(choice));
-    
+
     if (choice[0] == '1')
     {
         FILE *file = fopen("events.txt", "a");
@@ -748,11 +747,11 @@ void viewEvents()
     char line[300], name[100], venue[100], date[20], time[20];
     int seatCapacity;
     int eventCount = 0;
-    char events[50][300]; // Store up to 50 events
+    char events[50][300];         // Store up to 50 events
     char eventMenuItems[51][200]; // Array for menu items (50 events + return option)
 
     printCentered("-- Available Events --");
-    
+
     while (fgets(line, sizeof(line), file))
     {
         if (sscanf(line, "%99[^|]|%99[^|]|%19[^|]|%19[^|]|%d", name, venue, date, time, &seatCapacity) == 5)
@@ -763,17 +762,17 @@ void viewEvents()
         }
     }
     fclose(file);
-    
+
     // Add return option
     snprintf(eventMenuItems[eventCount], sizeof(eventMenuItems[eventCount]), "%d. Return to main menu", eventCount + 1);
-    
+
     // Convert to const char* array for printCenteredBlock
     const char *menuPtrs[51];
     for (int i = 0; i <= eventCount; i++)
     {
         menuPtrs[i] = eventMenuItems[i];
     }
-    
+
     // Print the event menu as a centered block
     printCenteredBlock(menuPtrs, eventCount + 1);
 
@@ -804,7 +803,7 @@ void viewEvents()
     // Show details for selected event
     sscanf(events[choice - 1], "%99[^|]|%99[^|]|%19[^|]|%19[^|]|%d", name, venue, date, time, &seatCapacity);
     printCentered("\n--- Event Details ---");
-    
+
     // Create event details array
     char eventDetails[5][200];
     snprintf(eventDetails[0], sizeof(eventDetails[0]), "Name: %s", name);
@@ -812,14 +811,14 @@ void viewEvents()
     snprintf(eventDetails[2], sizeof(eventDetails[2]), "Date (DD-MM-YYYY): %s", date);
     snprintf(eventDetails[3], sizeof(eventDetails[3]), "Time: %s", time);
     snprintf(eventDetails[4], sizeof(eventDetails[4]), "Seat Capacity: %d", seatCapacity);
-    
+
     // Convert to const char* array for printCenteredBlock
     const char *detailsPtrs[5];
     for (int i = 0; i < 5; i++)
     {
         detailsPtrs[i] = eventDetails[i];
     }
-    
+
     // Print event details as a centered block
     printCenteredBlock(detailsPtrs, 5);
 
